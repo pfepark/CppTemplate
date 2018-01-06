@@ -60,3 +60,39 @@ int main()
 ```
 사용하지 않는 템플릿은 인스턴스화 되지 않는다.
 static 맴버도 인스턴스화 되지 않는다.
+
+### lazy instantiation, if
+```cpp
+template<typename T> void foo(T n)
+{
+    *n = 10;
+}
+
+int main()
+{
+    if (false)
+        foo(0);    // compile error
+        
+    if constexpr (false)
+        foo(0);    // compile ok
+}
+```
+1. if문은 "실행시간 조건문"이므로, 컴파일 시간에 조건이 false로 결정되어도 if문에 있는 코드는 사용되는 것으로 간주 된다.
+2. C++17 if constexpr은 "컴파일 시간 조건문"이므로 조건이 false로 결정되면 if문에 있는 코드는 사용되지 않는 것으로 간주 된다.
+
+```cpp
+template<typename T> void foo(T n, int)
+{
+    *n = 3.4;
+}
+
+template<typename T> void foo(T n, double)
+{
+}
+
+int main()
+{
+    foo(1, 3.4);    // compile ok
+}
+```
+동일한 이름의 함수가 여러 개 있을 때 어떤 함수를 호출할지 결정하는 것은 컴파일 시간에 이루어 진다. 선택되지 않은 함수가 템플릿이라면 인스턴스화되지 않는다.
