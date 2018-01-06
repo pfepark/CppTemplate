@@ -42,3 +42,21 @@ int main()
 1. 함수 템플릿 사용시 컴파일러에 의한 타입 추론을 막는 테크닉
 2. 함수 템플릿 사용시 사용자가 반드시 타입을 전달하도록 하고 싶을 때.
 - 컴파일레 의한 타입 추론이 원하지 않는 타입으로 추론되는 경우
+
+### lazy instantiation
+```cpp
+template<typename T> class A
+{
+    T data;
+public:
+    void foo(T n) {*n = 10; }   // error
+};
+
+int main()
+{
+    A<int> a;   // compile ok. 
+    a.foo(0);   // error
+}
+```
+사용하지 않는 템플릿은 인스턴스화 되지 않는다.
+static 맴버도 인스턴스화 되지 않는다.
