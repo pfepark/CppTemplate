@@ -224,3 +224,123 @@ foo(x);
 - lvalue와 rvalue를 모두 전달 받는다. (perfect forwarding 참조)
 
 1. 규칙 4. 배열을 전달 받을 때 - argument decay 발생
+
+### Class template
+```cpp
+template<typename T> class Complex
+{
+    T re, im;
+public:
+    void(Complex c) // -> void foo(Complex<T> c)
+    {
+        Complex c2; // -> Complex<T> c2;
+    }
+}
+
+void foo(Complex c)	// error
+{
+}
+
+int main()
+{
+    Complex      c1;    // error, need c++17 deduction guide
+    Complex<int> c2;
+}
+```
+1. template & type
+- Complex : template
+- Complex<T> : type
+2. 맴버 함수 안에서는 Complex<T> 대신 Complex를 사용할 수 있다.
+
+```cpp
+template<typename T> class Complex
+{
+    T re, im;
+public:
+    Complex(T a = {}, T b = {}) : re(a), im(b) {}
+    T getReal() const;
+    static int cnt;
+    
+    // 클래스 템플릿의 맴버함수 템플릿
+    template<typename U> T func(const U& c);
+};
+
+template<typename T> template<typename U>
+T Complex<T>::func(const U& c)
+{
+}
+
+tempalte<typename T>
+int Complex<T>::cnt = 0;
+
+tempalte<typename T> T Complex<T>::getReal() const
+{
+    return re;
+}
+
+int main()
+{
+}
+```
+1. 디폴트 값 표기
+- int a = 0;
+- T a = T();    // C++98/03
+- T a = {};     // C++11
+2. 맴버 함수를 외부에 구현하는 모양
+3. static member data의 외부 선언 
+4. 클래스 템플릿의 맴버 함수 템플릿
+
+### Generic copy constructor
+```cpp
+template<typename T> class Complex
+{
+    T re, im;
+public:
+    Complex(T a = {}, T b = {}) : re(a), im(b) {}
+    
+    // 일반적인 복사 생성자
+    //Complex(const Complex<T>& c) {}
+    
+    //Complex(const Complex<int>& c) {} // Complex<int>만 받을 수 있다.
+    
+    template<typename U>
+    Complex<const Complex<U>& c) {}
+    
+    template<typename>
+    friend class Complex; // 모든 종류의 Complex Template class와 friend관계다.
+};
+
+// 일반적인 복사 생성자 구현
+template<typename T> template<typename U>
+Complex<T>::Complex(const Complex<U>& c) : re(c.re), im(c.im)	// c는 private으로 컴파일되지 않아 friend선언이 필요.
+{
+}
+
+int main()
+{
+    Complex<int> c1(1, 1);   // ok
+    Complex<int> c2 = c1;    // ok
+    
+    Complex<double> c3 = c1;    // Complex<int>와 Complex<double>은 다른 타입이다.
+```
+
+```cpp
+#include <memory>
+using namespace std;
+
+class Animal {};
+class Dog : public Animal {};
+
+int main()
+{
+    shared_ptr<Dog> p1(new Dog);
+    shared_ptr<Animal> p2 = p1; // template타입이 다른데 상속관계로 인해 컴파일이 되어야 한다. shared_ptr는 복사생성자, 대입연산자 등 다 구현되어 있다.
+    
+    p2 = p1;
+    
+    if (p2 == p1) {}
+    if (p2 != p1) {}
+    
+    return 0;
+}
+```
