@@ -402,3 +402,62 @@ int main()
 클래스 탬플릿 안에 friend 함수를 선언하는 방법
 1. friend 함수 선언시에 함수 자체를 탬플릿 모양으로 선언
 2. friend 함수를 일반 함수로 구현하고, 구현을 클래스 탬플릿 내부에 포함한다.
+
+### typename keyword
+```cpp
+class Test
+{
+public:
+    enum { value1 = 1 };
+    static int value2;
+
+    typedef int INT;
+    using SHORT = short;
+
+    class innerClass {};
+}
+
+int Test::value2 = 1;
+
+int main()
+{
+    int n1 = Test::value1;
+    int n2 = Test::value2;
+
+    Test::INT a;
+    Test::SHORT b;
+    Test::innerClass c;
+}
+```
+1. "클래스 이름:"으로 접근 가능한 요소들
+- 값 (enum 상수, static 맴버 변수)
+- 타입 : typedef, using
+
+```cpp
+int p = 0;
+
+class Test
+{
+public:
+    //....
+};
+
+template<typename T>
+int foo(T t) // T는 Test로 결정..
+{
+    // 아래 한줄을 해석하시오.
+    T::DWORD * p;   // 값으로 해석 가능 : 곱하기 p
+                    // 타입으로 해석 가능 : 포인터 지역변수 선언
+
+    T::DWORD * p;   // 컴파일러는 T::DWORD는 값으로 해석
+    typename T::DWORD * p // 컴파일러는 T::DWORD는 타입으로 해석한다.
+    
+    return 0;
+}
+
+int main()
+{
+    Test t;
+    foo(t);
+}
+```
