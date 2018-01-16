@@ -344,3 +344,61 @@ int main()
     return 0;
 }
 ```
+### template && friend function
+```cpp
+#include <iostream>
+using namespace std;
+
+template<typename T> void foo(T a)
+{
+    cout << "T" << endl;
+}
+
+void foo(int a)
+{
+    cout << "int" << endl;
+}
+
+int main()
+{
+    foo(3); // template이 있다고 하더라고 정확한 타입 함수가 우선.
+
+    return 0;
+}
+```
+1. 함수 탬플릿 보다는 일반 함수가 우선해서 선택된다.(exactly matching)
+2. 함수 탬플릿 있어도 동일한 타입의 인자를 가지는 일반 함수의 선언만 있으면 link에러가 발생한다.
+
+```cpp
+#include <iostream>
+using namespace std;
+
+template<typename T>
+class Point
+{
+    T x, y;
+public:
+    Point(T a = 0, T b = 0) : x(a), y(b) {}
+    // 클래스 탬플릿 선언임.
+    friend ostream& operator<<(ostream& os, const Point& p); // 맴버변수 접근을 위해서..
+    {
+         return os << p.x << ", " << p.y;     
+    }
+}
+
+template<typename T>
+ostream& operator<<(ostream& os, const Point<T>& p)
+{
+    return os << p.x << ", " << p.y;
+}
+
+int main()
+{
+    Point<int> p(1, 2);	// 특정타입에 대한 선언이 되어 Point클래스의 함수탬플릿이 특정 타입에 대한 선언이 됨. link애러 발생
+
+    cout << p << endl;  // 추출 연산자 재정의 필요
+}
+```
+클래스 탬플릿 안에 friend 함수를 선언하는 방법
+1. friend 함수 선언시에 함수 자체를 탬플릿 모양으로 선언
+2. friend 함수를 일반 함수로 구현하고, 구현을 클래스 탬플릿 내부에 포함한다.
