@@ -502,3 +502,34 @@ int main()
     print_first_element(v);
 }
 ```
+### class template type deduction using value_type
+```cpp
+#include <list>
+using namespace std;
+
+template<typename T> class Vector
+{
+    T* buff;
+    int size;
+public:
+    Vector(int sz, T value) {}
+
+    template<typename C> Vector(C c) {}
+};
+
+// 아래 생성자를 사용하게 되면 -> 이후 타입으로 추론해달라.
+template<typename C>
+Vector(C c) {} -> Vector<typename C::value_type>;
+
+int main()
+{
+    Vector<int> v(10, 3);
+    Vector v1(10, 3);    //C++17에서는 두번째 인자를 보고 추론가능
+    list<int> s = {1, 2, 3};
+
+    Vector v2(s);   // 생성자 추가하고 deduction guide 작성 필요
+
+    // 도전과제 : 다른 컨테이너의 반복자로 초기화한 Vector
+    Vector v3(s.begin(), s.end());
+}
+```
