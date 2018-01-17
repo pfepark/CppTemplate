@@ -461,3 +461,44 @@ int main()
     foo(t);
 }
 ```
+
+### value_type
+```cpp
+#include <iostream>
+#include <vector>
+#include <list>
+
+using namespace std;
+
+void print_first_element(vector<int>& v)
+{
+    int n = v.front();
+    cout << n << endl;
+}
+
+// vector의 모든 타입을 처리하는 함수
+template<typename T>
+void print_first_element(vector<T>& v)
+{
+    T n = v.front();
+    cout << n << endl;
+}
+
+// 모든 컨테이너를 처리하는 함수.
+template<typename T>
+void print_first_element(T& v)
+{
+    // 예 : T는 list<double>
+    // double이 필요하다.
+    // T::value_type => list<double>::value_type, STL에서는 typedef를 해두었다.
+    typename T::value_type n = v.front();
+    auto n = v.front(); // C++11
+    cout << n << endl;
+}
+
+int main()
+{
+    vector<int> v = { 1, 2, 3 };
+    print_first_element(v);
+}
+```
