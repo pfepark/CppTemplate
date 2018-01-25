@@ -690,3 +690,27 @@ int main()
 	Point3<int> p3; // Pair<int, short>
  }
 ```
+
+### variable template (C++14)
+```cpp
+//#define PI 3.14
+
+//constexpr double PI = 3.14;
+//constexpr float PI = 3.14;
+
+template<typename T>
+constexpr T PI = 3.14;
+
+template<typename T> void foo(T a, T b)
+{
+
+}
+
+int main()
+{
+	float f = 3.3;
+	foo(f, PI<float>);
+
+	double d = PI<double>;
+}
+```
