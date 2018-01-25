@@ -649,3 +649,44 @@ int main()
 template<typename ... T> class Test {};
 tempalte<int ... N> class Test {};
 ```
+
+### tempalte alias
+```cpp
+typedef int DWORD;
+typedef void(*F)(int);
+
+// C++11
+using DWORD = int;
+using F = void(*F)(int);
+
+int main()
+{
+    DWORD n;
+    
+    F f;
+}
+
+ template<typename T, typename U> struct Pair
+ {
+	 T v1;
+	 U v2;
+ };
+
+ typedef Pair Point;	// error, 타입의 별칭이 아니라 탬플릿의 별칭을 시도..
+
+ template<typename T, typename U>
+ using Point = Pair<T, U>;
+ 
+ template<typename T>
+ using Point2 = Pair<T, T>;
+ 
+ template<typename T>
+ using Point3 = Pair<T, short>;
+
+ int main()
+ {
+	Point<int, double> p;
+	Point2<int> p2; // Pair<int, int>
+	Point3<int> p3; // Pair<int, short>
+ }
+```
