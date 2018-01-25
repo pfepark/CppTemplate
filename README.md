@@ -533,3 +533,119 @@ int main()
     Vector v3(s.begin(), s.end());
 }
 ```
+### template parameter
+```cpp
+// 템플릿 인자로 올 수 있는 것.
+// 1. type
+// 2. 값 (non-type)
+// 3. template
+template<typename T, int N> struct Stack
+{
+	T buff[N];
+}
+
+int main()
+{
+	Stack<int, 10> s;
+	return 0;
+}
+
+// type parameter
+template<typename T> class List
+{
+
+};
+
+int main()
+{
+	list<int> s1;
+}
+
+// non-type (value) parameter
+// 정수형 상수 (실수 안됨)
+template<int N> class Test1 {};
+
+// 2. enum 상수
+enum Color { red = 1, green = 2 };
+template<Color> class Test2 {}:
+
+// 3. 포인터 : 지역변수의 주소는 안된다. 전역변수 주소는 가능.
+// no linkage를 가지는 변수 주소는 안됨.
+template<int*> class Test3 {};
+
+int x = 0;
+
+// 4. 함수 포인터
+template<int(*)(void) class Test4 {};
+
+int main()
+{
+	int n = 10;
+
+	Test1<10> t1;	// ok
+	//Test1<n> t2;	// error
+	Test2<red> t3;	// ok
+
+	//Test3<&n> t4;	// n은 여기서 스택의 주소인데 알 수 없다.
+	Test3<&x>	t5;	// ok
+
+	Test4<&main> t6;	// ok
+}
+
+// non-type(값) parameter
+// 정수형 상수, enum, 포인터, 함수 포인터, 맴버 함수 포인터
+// C++17 : auto
+
+template<auto N> struct Test
+{
+	Test()
+	{
+		cout << typeid(N).name() << endl;	// type 확인
+	}
+};
+
+int x = 0;
+
+int main()
+{
+	Test<10> t1;	// N : int
+	Test<&x> t2;	// N : int*
+	Test<&main> t3;
+}
+
+// 3. tempalte parameter
+
+template<typename T> class list {};
+
+// 첫번째 인자는 타입, 두번째는 템플릿인데 인자가 하나인 템플릿.
+template<typename T, template<typename> class C> class stack
+{
+	C c;	// error, list c
+	C<T> c;	// ok. list<int> c
+};
+
+int main()
+{
+	list		s1;	// T를 결정할 수 없어서 error, list는 타입은 아니고 템플릿
+	list<int>	s2; // ok. list<int>는 타입
+
+	stack<int, list> s3;	// ok
+}
+
+// default parameter
+template<typename T = int, int N = 10> struct Stack
+{
+
+}
+
+int main()
+{
+	Stack<int, 10>	s1;
+	Stack<int>		s2;
+	Stack<>			s3;	// 모든 인자 디폴트 값 사용
+}
+
+// C++11 variadic template
+template<typename ... T> class Test {};
+tempalte<int ... N> class Test {};
+```
