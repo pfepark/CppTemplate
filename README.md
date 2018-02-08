@@ -714,3 +714,39 @@ int main()
 	double d = PI<double>;
 }
 ```
+
+### specialization
+```cpp
+#include <iostream>
+using namespace std;
+
+// primary template
+template<typename T> class Stack
+{
+public:
+	void push(T a) { cout << "T" << endl; }
+};
+
+// partial specialization(부분 특수화, 전문화)
+template<typename T> class Stack<T*>
+{
+public:
+	void push(T* a) { cout << "T*" << endl; }
+};
+
+// char*라고 완벽히 타입이 결정되었으므로 typename T 필요없다.
+// specialization(특수화, 전문화)
+template<> class Stack<char*>
+{
+public:
+	void push(char* a) { cout << "char*" << endl; }
+};
+
+int main()
+{
+	Stack<int> s1; s1.push(0);
+	Stack<int*> s2; s2.push(0);
+	Stack<char*> s3; s3.push(0);
+}
+```
+특수화를 사용하면 소스코드는 좀 더 커진다. template이 많아서.. 하지만 기계어코드는 유사함.
