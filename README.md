@@ -807,3 +807,34 @@ int main()
 	Test<int, Test<char, short>>::foo();	// T, Test<U,V>
 }
 ```
+### Partial Ordering
+```cpp
+#include <iostream>
+using namespace std;
+
+// primary template
+template<typename T, typename U> struct order
+{
+	static void foo() { cout << "T, U" << endl; }
+}
+
+// partial specialization
+template<typename T> struct order<T, T>
+{
+	static void foo() { cout << "T, T" << endl; }
+}
+
+template<typename T> struct order<T*, T*>
+{
+	static void foo() { cout << "T*, T*" << endl; }
+}
+
+int main()
+{
+	order<int*, int*>::foo();
+}
+```
+template instantiation을 위해 어떤 템플릿을 사용할 것인가?
+- specialization > partial specialization > primary template
+2개 이상의 partial specialization 버전이 사용 가능 할 때
+- The most specialized specialization is used
