@@ -822,12 +822,12 @@ template<typename T, typename U> struct order
 template<typename T> struct order<T, T>
 {
 	static void foo() { cout << "T, T" << endl; }
-}
+};
 
 template<typename T> struct order<T*, T*>
 {
 	static void foo() { cout << "T*, T*" << endl; }
-}
+};
 
 int main()
 {
@@ -838,3 +838,63 @@ template instantiation을 위해 어떤 템플릿을 사용할 것인가?
 - specialization > partial specialization > primary template
 2개 이상의 partial specialization 버전이 사용 가능 할 때
 - The most specialized specialization is used
+
+### Specialization 주의사항
+```cpp
+#include <iostream>
+using namespace std;
+
+template<typename T> struct Test
+{
+	static void foo() { cout << typeid(T).name() << endl; }
+};
+
+template<typename T> struct Test<T*>
+{
+	static void foo() { cout << typeid(T).name() << endl; }
+};
+
+int main()
+{
+	Test<int>::foo();	// T:int
+	Test<int*>::foo();	// T:int
+}
+```
+```cpp
+template<typename T, int N = 10> struct Stack
+{
+	T buff[N];
+};
+
+// 부분 전문화버전은 default값은 primary template에 선언된 것을 사용한다.
+template<typename T, int N> struct Stack
+{
+	T buff[N];
+};
+
+int main()
+{
+	Stack<int, 10> 	s1;
+	Stack<int> 		s2;
+	Stack<int*> 	s3;
+}
+```
+```cpp
+template<typename T> class Stack
+{
+public:
+	T pop()	{}
+	void push(T a);
+}
+
+
+template<typename T> void Stack<T>::push(T a)
+{
+	cout << "T" << endl;
+}
+// 맴버함수만 특수화
+template<> void Stack<char*>::push(char* a)
+{
+	cout << "char*" << endl;
+}
+```
