@@ -1124,3 +1124,23 @@ int main()
 	cout << n << endl;
 }
 ```
+### constexpr function
+```cpp
+template<int N> struct check {};
+
+// constexpr 함수 - c++11
+constexpr int add(int a, int b)
+{
+	return a + b;
+}
+
+int main()
+{
+	int n = add(1, 2);	// 함수를 컴파일 시간에 계산됨.
+
+	check< add(1, 2) > c; // ok
+
+	int n1 = 1, n2 = 2;
+	check< add(n1, n2) > c;	// error
+}
+```
