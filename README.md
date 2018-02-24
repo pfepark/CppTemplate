@@ -1144,3 +1144,93 @@ int main()
 	check< add(n1, n2) > c;	// error
 }
 ```
+
+### Type traits 개념 (is_pointer)
+```cpp
+template<typename T> void printv(T v)
+{
+	if (T is pointer)
+		cout << v << " : " << *v << endl;
+	cout << v << endl;
+}
+
+int main()
+{
+	int n = 3;
+	double d = 3.4;
+
+	printv(n);
+	printv(d);
+	printv(&d);
+}
+```
+1. 컴파일 시간에 타입에 대한 정보를 얻거나 변형된 타입을 얻을 떄 사용하는 도구 (메타 함수)
+2. <type_traits> 헤더로 제공 (c++ 11)
+
+```cpp
+template<typename T> struct xis_pointer
+{
+	enum { value = false };
+}
+
+// 핵심 : 포인터 타입에 대해서 부분 특수화
+template<typename T> struct xis_pointer<T*>
+{
+	enum { value = true };
+}
+
+template<typename T> void foo(T v)
+{
+	if (xis_pointer<T>::value)
+		cout << "pointer" << endl;
+	else
+		cout << "not pointer" << endl;
+}
+
+int main()
+{
+	int n = 3;
+	foo(n);		// not pointer
+	foo(&n);	// pointer
+}
+```
+1. primary tempalte 에서 false 리턴
+2. partial specialization 에서 true 리턴
+
+```cpp
+template<typename T> struct xis_pointer
+{
+	//enum { value = false };
+	static constexpr bool value = false;
+};
+
+template<typename T> struct xis_pointer<T*>
+{
+	static constexpr bool value = true;
+};
+
+template<typename T> struct xis_pointer<T* const>
+{
+	static constexpr bool value = true;
+};
+
+template<typename T> struct xis_pointer<T* volatile>
+{
+	static constexpr bool value = true;
+};
+
+template<typename T> struct xis_pointer<T* const volatile>
+{
+	static constexpr bool value = true;
+};
+
+int main()
+{
+	cout << xis_pointer<int>::value << endl;
+	cout << xis_pointer<int*>::value << endl;
+	cout << xis_pointer<int* const>::value << endl;
+	cout << xis_pointer<int* volatile>::value << endl;
+	cout << xis_pointer<int* const volatile>::value << endl;
+	cout << xis_pointer<int* volatile const>::value << endl;
+}
+```
