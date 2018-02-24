@@ -898,3 +898,56 @@ template<> void Stack<char*>::push(char* a)
 	cout << "char*" << endl;
 }
 ```
+### IfThenElse
+```cpp
+#include <iostream>
+#include <typeinfo>
+using namespace std;
+
+template<bool b, typename T, typename F> struct IfThenElse
+{
+	typedef T type;
+};
+
+template<typename T, typename F>
+struct IfThenElse<false, T, F>
+{
+	typedef F type;
+};
+
+int main()
+{
+	IfThenElse<true, int, double>::type t0;		// int
+	IfThenElse<false, int, double>::type t1;	// double 부분특수화로 인한..
+
+	cout << typeid(t0).name() << endl;
+	cout << typeid(t1).name() << endl;
+}
+// 컴파일 시간에 bool 값에 따라 type을 선택하는 도구
+
+// 비트 관리 및 보관을 위한 클래스
+template<size_t N>
+struct Bit
+{
+	//int bitmap;	// 32bit 관리
+	using type = typename IfThenElse<(N <= 8), char, int>::type;
+
+	using type1 = typename conditional<(N <= 8), char, int>::type;
+
+	type bitmap;
+};
+
+int main()
+{
+	Bit<32> b1;
+	Bit<8> b2;
+
+	Bit<16> b3;
+
+	cout << sizeof(b1) << endl;	// 4
+	cout << sizeof(b2) << endl;	// 1
+	cout << sizeof(b3) << endl;	// 1
+}
+```
+- IfThenElse, IF, Select 라는 이름으로 알려져 있다.
+- C++ 표준에는 confitional이라는 이름으로 제공 <type_traits> 헤더.
