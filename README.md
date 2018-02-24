@@ -1093,3 +1093,34 @@ int main()
  - 아무 멤버도 없지만 "타입"이므로 함수 오버로딩이나 템플릿 인자로 활용가능
 2. 상속을 사용하는 기술
 3. 개수의 제한을 없앨 수 없을까?  C++11 Variadic template
+
+### Template Meta Programming
+```cpp
+// 컴파일 타임에 계산하는 프로그래밍
+// tempalte meta programming
+template<int N> struct factorial
+{
+	//enum { value = N * factorial<N-1>::value };
+	// c++ 11
+	static constexpr int value = N * factorial<N-1>::value;
+};
+
+// 재귀의 종료를 위해 특수화 문법 사용
+template<> struct factorial<1>
+{
+	//enum { value = 1 };
+	static constexpr int value = 1;
+};
+
+int main()
+{
+	int n = factorial<5>::value;	// % * 4* 3* 2* 1 = 120
+	//      5 * f<4>::v
+	//      4 * f<3>::v
+	//      3 * f<2>::v
+	//      2 * f<1>::v
+	//            1
+
+	cout << n << endl;
+}
+```
