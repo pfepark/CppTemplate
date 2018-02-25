@@ -1424,3 +1424,73 @@ int main()
 ```
 1. 동일한 이름을 가지는 함수가 여러 개 있을 때, 어느 함수를 호출할지 결정하는 것은 컴파일 시간에 이루어 진다. 선택되지 않는 함수는 템플릿이었다면 instantiation 되지 않는다.
 2. 포인터 일때(1)와 포인터 아닐때(0)를 서로 다른 타입화해서 함수 오버로딩의 인자로 활용한다.
+
+### integral_constant
+```cpp
+template<typename T, T N> struct integral_constant
+{
+	static constexpr T value = N;
+};
+
+integral_constant<int, 0> t0;
+integral_constant<int, 1> t1;
+integral_constant<short, 0> t3;
+
+typedef integral_constant<bool, true> true_type;
+typedef integral_constant<bool, false> false_type;
+
+// is_pointer를 만들때..
+template <typename T>
+struct is_pointer : false_type
+{
+
+};
+
+template <typename T>
+struct is_pointer <T*>: true_type
+{
+
+};
+
+int main()
+{
+
+}
+```
+1. int뿐만 아니라 모든 정수 계열(bool, char, short, int, long, long long)의 상수 값을 타입으로 만들 수 있게 하자. (실수는 템플릿인자로 사용할 수 없다.)
+2. integral_constant : 모든 정수 계열의 컴파일 시간 상수를 타입으로 만드는 템플릿
+3. true_type, false_type
+ - true/false 참 거짓을 나타내는 값, 서로 같은 타입
+ - true_type/false_type 참 거짓을 나타내는 타입, 서로 다른 타입
+4. is_pointer 등의 type_traits를 만들 때 integral_constant를 기반 클래스로 사용한다.
+ - T가 포인터가 아니라면 value=false, 기반 클래스는 false_type
+ - T가 포인터라면 value=true, 기반 클래스는 true_type
+
+ ```cpp
+ #include <type_traits>
+
+ template<typename T>
+ void printv_imp(T v, true_type)
+ {
+	 cout << v << " : " << *v << endl;
+ }
+ template<typename T>
+ void printv_imp(T v, false_type)
+ {
+	 cout << v << endl;
+ }
+ template<typename T> void printv(T v)
+ {
+	 printv_imp(v, is_pointer<T>());
+ }
+ 
+ int main()
+ {
+	 int n = 3;
+	 printv(n);
+	 printv(&n);
+ }
+ ```
+ 1. is_pointer<T>에서
+  - T가 포인터가 아니면 value=false, 기반 클래스는 false_type
+  - T가 포인터라면 value=true, 기반 클래스는 true_type
