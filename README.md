@@ -1494,3 +1494,53 @@ int main()
  1. is_pointer<T>에서
   - T가 포인터가 아니면 value=false, 기반 클래스는 false_type
   - T가 포인터라면 value=true, 기반 클래스는 true_type
+
+### type query using type_traits
+```cpp
+#include <type_traits>
+template<typename T>
+void foo_imp(T v, true_type)
+{
+	*v = 10;
+}
+
+template<typename T>
+void foo(T v, false_type)
+{
+
+}
+
+template<typename T>
+void foo(T v)
+{
+	if (is_pointer<T>::value)	// C++17 if constexpr
+	{
+
+	}
+	else
+	{
+
+	}
+
+	foo_imp(v, is_pointer<T>());
+}
+
+template<typename T>
+void foo(T v)
+{
+
+}
+
+int main()
+{
+	int n = 0;
+	foo(n);
+	foo(&n);
+}
+```
+1. <type_traits> 헤더 포함
+2. ::value 값을 조사하는 방법 (is_pointer<T>::value)
+ - if 문 사용시에는 *v 등의 표현을 사용할 수 없다.
+ - C++17 의 if constexpr 사용시에는 *v 사용할 수 있다.
+ - C++17 부터는 is_pointer_v<T> 표현식도 제공
+3. true_type/false_type을 사용한 함수 오버로딩
