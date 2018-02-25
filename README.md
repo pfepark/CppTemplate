@@ -1345,3 +1345,82 @@ int main()
 1. 컴파일 시간 정수형 상수를 각각의 독립된 타입으로 만드는 도구.
 2. int2type을 사용하면 컴파일 시간에 결정된 정수형 상수를 모두 다른 타입으로 만들 수 있다.
 3. int2type을 사용하면 컴파일 시간에 결정된 정수형 상수를 가지고 함수 오버 로딩에 사용하거나 템플릿인자, 상속 등에서 사용할 수 있다.
+
+
+### using int2type
+```cpp
+template<typename T> void printv(T v)
+{
+	/*
+	if ( xis_pointer<T>::value)
+		cout << v << " : " << *v << endl;
+	else
+		cout << v << endl;
+	*/
+	if constexpr ( xis_pointer<T>::value)	// C++17 
+		cout << v << " : " << *v << endl;
+	else
+		cout << v << endl;
+}
+
+int main()
+{
+	int n = 3;
+	printv(n);	// error
+	printv(&n);
+}
+```
+1. if문은 실행 시간 조건문이다. 컴파일 시간에 조건이 false로 결정되어도 if문의 코드는 컴파일 된다. (값n을 역참조 할 수 없다.)
+
+```cpp
+template<typename T> void printv_pointer(T v)
+{
+	cout << v << " : " << *v << endl;
+}
+template<typename T> void printv_not_pointer(T v)
+{
+	cout << v << endl;
+}
+template<typename T> void printv(T v)
+{
+	if ( xis_pointer<T>::value)
+		printv_pointer(v);
+	else
+		printv_not_pointer(v);
+}
+
+int main()
+{
+	int n = 3;
+	printv(n);	// error
+	printv(&n);
+}
+```
+1. if문은 실행시간조건문이므로 if문의 안에서 호출한 함수 템플릿은 template instantiation된다.
+2. if문과 같은 실행시간 조건 분기문이 아닌 컴파일 시간 분기문이 필요하다.
+
+```cpp
+template<typename T>
+void printv_imp(T v, int2type<1>)
+{
+	cout << v << " : " << *v << endl;
+}
+template<typename T>
+void printv_imp(T v, int2type<0>)
+{
+	cout << v << endl;
+}
+template<typename T> void printv(T v)
+{
+	printv_imp(v, int2type<xis_pointer<T>::value>() );	// 포인터:1 포인터 아님:0 구분이 되지 않으므로 int2type이 필요.
+}
+
+int main()
+{
+	int n = 3;
+	printv(n);
+	printv(&n);
+}
+```
+1. 동일한 이름을 가지는 함수가 여러 개 있을 때, 어느 함수를 호출할지 결정하는 것은 컴파일 시간에 이루어 진다. 선택되지 않는 함수는 템플릿이었다면 instantiation 되지 않는다.
+2. 포인터 일때(1)와 포인터 아닐때(0)를 서로 다른 타입화해서 함수 오버로딩의 인자로 활용한다.
