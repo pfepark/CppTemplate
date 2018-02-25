@@ -1544,3 +1544,54 @@ int main()
  - C++17 의 if constexpr 사용시에는 *v 사용할 수 있다.
  - C++17 부터는 is_pointer_v<T> 표현식도 제공
 3. true_type/false_type을 사용한 함수 오버로딩
+
+### remove_pointer
+```cpp
+#include <type_traits>
+
+template<typename T> void foo(T a)
+{
+	bool b = is_pointer<T>::value;
+
+	typename remove_pointer<T>::type t;
+}
+
+int main()
+{
+	int n = 10;
+	foo(n);
+	foo(&n);
+}
+```
+1. type에 대한 query-is_pointer<>, is_array<>, extent<>
+2. type에 대한 변형 타입 구하기 - remove_pointer<>, add_pointer<>
+
+```cpp
+template<typename T> struct xremove_pointer
+{
+	typedef T type;
+};
+
+template<typename T> struct xremove_pointer<T*>
+{
+	typedef T type;
+};
+
+template<typename T> void foo(T a)
+{
+	typename xremove_pointer<T>::type t;
+
+	cout << typeid(t).name() << endl;
+}
+
+int main()
+{
+	int n = 10;
+	foo(n);
+	foo(&n);
+}
+```
+변형 타입을 구하는 traits 만드는 방법
+1. primary template을 만들고 typedef T type을 제공한다. (c++11 using도 가능)
+2. 부분 특수화를 통해서 원하는 타입을 얻을 수 있도록 T 타입을 분할 한다.
+3. const, volatile 버전도 제공해야 한다.
