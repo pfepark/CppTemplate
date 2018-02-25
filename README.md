@@ -1716,3 +1716,109 @@ int main()
 - result_of(until C++17), invoke_result(since C++17)
 - 예제에서 구현한 방식과는 전혀 다른 방식으로 구현되어 있음
 - decltype 사용해서 구현 (일반 함수, 함수 객체, 람다표현식등의 모든 callable object 고려)
+
+### type_traits #1
+
+ 예제 | 표준
+xis_pointer | is_pointer
+xis_array | is_array
+배열의 크기 | extent
+xremove_pointer | remove_pointer
+result_type | result_of, invoke_result
+
+C++ 표준 type traits 사용법
+1. 변형된 타입을 얻는 traits
+- typename remove_pointer<T>::type n;
+- remove_pointer_t<T> n;	// C++14
+2. 타입의 정보를 조사하는 traits
+- bool b = is_pointer<T>::value;
+- bool b = is_pointer_v<T>;	// C++17
+- 함수 오버로딩 사용 (true_type, false_type)
+
+```cpp
+// C++14부터 제공
+template<typename T>
+using remove_pointer_t = typename remove_pointer<T>::type;
+
+template<typename T> void foo(T a)
+{
+	typename remove_pointer<T>::type n;
+	remove_pointer_t<T> n;
+
+	cout << typeid(n).name() << endl;
+}
+```
+
+```cpp
+void foo_imp(true_type) {}
+void foo_imp(false_type) {}
+// variable template
+// C++17
+template<typename T>
+inline constexpr bool is_pointer_v = is_pointer<T>::value;
+
+template<typename T> void foo(T a)
+{
+	// T가 포인터 인지 알고 싶다.
+	//bool b = is_pointer<T>::value;
+
+	bool b = is_pointer_v<T>;
+
+	foo_imp(is_pointer<T>());
+}
+```
+### type_traits #2
+1. is_array<T>::value, extent<T, 0>::value
+2. is_same<T, U::value 두개가 같은 타입인지 조사
+3. remove_cv<T, U>::type
+4. decay<T>::type
+```cpp
+// array전달시 pointer로.. : decay 발생 참조로 받아야한다.
+template<typename T> void foo(T& a)
+{
+	if (is_array<T>::value)
+	{
+		cout << "array"
+		cout << extent<T, 0>::value;	// 3
+		cout << extent<T, 1>::value;	// 2
+	}
+}
+
+int main()
+{
+	int x[3][2] = {1,2,3,4,5,6};
+	foo(x);
+}
+```
+```cpp
+template<typename T, typename U>void foo(T a, U b)
+{
+	//bool ret = is_same<T, U>::value;
+	bool ret = is_same<typename remove_cv<T>::type,		// const, volatile을 제거한 타입 속성으로 비교한다.
+						typename remove_cv<U>::type>::value;
+
+	bool ret = is_base_of<T, U>::value;
+
+	cout << ret << endl;
+}
+
+int main()
+{
+	foo(0, 0);
+	foo<int, const int>(0, 0);
+
+	foo(int[3], int*>(0, 0);	//	bool ret = is_same<typename decay<T>::type,
+								//						typename decay<U>::type>::value;	배열을 포인터로 변환(decay)해서 비교
+}
+```
+```cpp
+template<typename T> void foo(T a)
+{
+	if (is_trivially_constructible<T>::value)	// cppreference.com 참조.
+	{
+		cout << "array"
+		cout << extent<T, 0>::value;	// 3
+		cout << extent<T, 1>::value;	// 2
+	}
+}
+```
