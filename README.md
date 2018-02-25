@@ -1595,3 +1595,36 @@ int main()
 1. primary template을 만들고 typedef T type을 제공한다. (c++11 using도 가능)
 2. 부분 특수화를 통해서 원하는 타입을 얻을 수 있도록 T 타입을 분할 한다.
 3. const, volatile 버전도 제공해야 한다.
+
+### remove_all_pointer
+```cpp
+template<typename T> struct xremove_pointer
+{
+	typedef T type;
+};
+
+template<typename T> struct xremove_pointer<T*>
+{
+	typedef T type;
+};
+
+template<typename T> struct xremove_all_pointer
+{
+	typedef T type;
+};
+
+template<typename T> struct xremove_all_pointer<T*>
+{
+	// 포인터형일때 재귀적으로 자기 템플릿이 계속 호출된다.
+	typedef typename xremove_all_pointer<T>::type type;	// 템플릿에 의존적으로 타입을 꺼내고 있으므로 typename필요
+};
+
+int main()
+{
+	xremove_pointer<int**>::type n;			// int*
+	xremove_all_pointer<int**>::type n;		// int
+
+	cout << typeid(n).name() << endl;
+}
+```
+1. 재귀 표현식을 사용해서 임의의 타입에서 모든 포인터를 제거하는 기술
