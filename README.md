@@ -1987,3 +1987,110 @@ int main()
 	foo(1, 3.4);
 }
 ```
+### recursive
+```cpp
+#include <tuple>
+
+template<typename... Types> void foo(Types ... args)
+{
+	int x[] = {args...};
+
+	tuple<Types...> tp(args...);
+
+	cout << get<0>(tp) << endl;
+	cout << get<1>(tp) << endl;
+	cout << get<2>(tp) << endl;
+}
+
+int main()
+{
+	foo(1, 3.4, "AA");	// args : 1, 3.4, "AA"
+}
+```
+1. Pack Expansion -> 배열 또는 tuple에 단는다.
+2. 재귀 호출과 유사한 호출식을 사용한다.
+```cpp
+void foo() {}	// 재귀의 종료를 위해서 구현.
+
+template<typename T, typename... Types>
+void foo(T value, Types ... args)
+{
+	cout << value << endl;
+
+	foo(args...);	// foo(3.4, "AA"); -> value : 3.4	다 다른 함수다. 엄밀히 재귀는 아님.
+					// foo("AA")
+					// foo()
+}
+
+int main()
+{
+	foo(1, 3.4, "AA");	// value : 1, args : 3.4, "AA"
+}
+```
+1. Pack Expansion : 배열 또는 tuple에 담는다.
+2. 재귀 호출과 유사한 호출
+ - 모든 인자를 가변 인자로 하지 말고 1번째 인자는 이름 있는 변수로 받는다.
+3. Fold Expression 사용, C++17
+
+### fold expression (C++17)
+```cpp
+template<typename... Types>
+int foo(Types ... args)
+{
+	int x[] = {args...};	// pack expansion
+	int n = (args + ...);	// fold expression
+						// 1 + (2 + (3+4))
+
+	int n = (args + ... + 10);	// 1+(2+(3+(4+10)))
+	int n = (10 + ... + args);	// (((10 + 1)+2)+3)+4
+	returna n;
+}
+
+int main()
+{
+	int n = foo(1, 2, 3, 4);	// args : 1,2,3,4
+}
+```
+1. 이항 연산자를 사용해서 parameter pack 안에 있는 요소에 연산을 수행하는 문법
+2. parameter pack의 이름에서 ...을 붙이지 않고 사용한다.
+ - args... : pack expansion
+ - args + ... : fold expression
+3. 4가지 형태
+ - unary right fold : (args op ...)          E1 op (E2 op (E3 op E4))
+ - unary left fold  : (... op args)          ((E1 op E2) op E3) op E4
+ - binary right fold : (args op...op init)   E1 op (E2 op (E3 op (E4 op init)))
+ - binary left fold : (init op ... op args)  (((init op E1) op E2) op E3) op E4
+
+```cpp
+template<typename ... Types>
+void foo(Types ... args)
+{
+	(cout << ... << args);
+	// ((cout << 1) << 2) << 3
+}
+
+int main()
+{
+	foo(1,2,3);
+ 	//(((cout << 1) << 2) << 3);
+}
+```
+
+```cpp
+#include <vector>
+std::vector<int> v;
+template<typename ... Types>
+void foo(Types ... args)
+{
+	//(args, ...);	// 1, (2, 3)
+
+	(v.push_back(args), ...);
+	// v.push_back(1), (v.push_back(2), v.push_back(3));
+}
+
+int main()
+{
+	foo(1,2,3);
+}
+```
+- parameter pack을 사용하는 패턴도 사용할 수 있다.
