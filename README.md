@@ -1822,3 +1822,168 @@ template<typename T> void foo(T a)
 	}
 }
 ```
+### variadic template
+```cpp
+// 가변인자 클래스 템플릿
+template<typename ... Types> class tuple
+{
+
+};
+
+// 가변 인자 함수 템플릿
+template<typename ... Types>
+void foo( Types ... args)
+{
+}
+
+int main()
+{
+	tuple<> t0;
+	tuple<int> t1;
+	tuple<int, char> t2;
+
+	foo();
+	foo(1);
+	foo(1, 2.3, "A");
+}
+```
+1. C++11부터 지원
+2. 가변인자 템플릿의 기본 모양
+3. 가변인자 함수 템플릿의 함수 인자인 args 안에는 여러개의 값이 들어 있다. parameter pack이라고 한다.
+### parameter pack
+```cpp
+void goo(int n, double d, const char* s)
+{
+	cout << "goo : " << n << " " << d << " " << s << endl;
+}
+
+template<typename ... Types>
+void foo( Types ... args)
+{
+	// args : Parameter Pack
+	cout << sizeof...(args) << endl;	// 파라미터 개수 (3)
+	cout << sizeof...(Types) << endl;	// 3
+
+	//goo( args );	// error parameter pack 자체는 인자로 넘길 수 없다.
+
+	goo(args...);	// pack expansion
+					// goo(e1, e2, e3) 모든 요소를 ,를 사용해서 풀어달라.
+					// goo(1, 3.4, "aaa")
+}
+
+int main()
+{
+	foo();
+	foo(1);
+	// Types : int, double, const char*
+	// args  :  1,   3.4,     "aaa"
+	foo(1, 3.4, "aaa");	
+}
+```
+1. Parameter Pack
+2. sizeof...(args) Parameter Pack에 있는 요소의 개수
+3. Pack Expansion
+
+### pack expansion #1
+```cpp
+void goo(int a, int b, int c)
+{
+
+}
+
+int hoo(int a) { return -a; }
+
+template<typename ... Types> void foo(Types ... args)
+{
+	int x[] = { args...};	// pack expansion
+							// { 1,2,3 }
+
+	int x[] = {(++args)...};	// { ++e1, ++e2, ++e3 } // {2, 3, 4}
+
+	int x[] = { hoo(args...)};	// hoo(1, 2, 3) error 인자 하나만 받는다.
+
+	int x[] = { hoo(args)...};	// { hoo(1), hoo(2), hoo(3) }
+
+	goo(args...);	// goo(1,2,3,); ok
+
+	goo(hoo(args...));	// goo (hoo(1,2,3)); error
+
+	goo(goo(args)...);	// goo(hoo(1), hoo(2), hoo(3));
+
+	for (auto n : x)
+		cout << n << endl;
+}
+
+int main()
+{
+	foo(1, 2, 3);	// Types : int, int, int
+					// args : 1, 2, 3
+}
+```
+1. "Parameter Pack을 사용하는 패턴"... -> 패턴(e1), 패턴(e2), 패턴(e3) = 각요소에 패턴 적용
+
+```cpp
+int print(int a)
+{
+	cout << a << ", ";
+	return 0;
+}
+
+template<typename... Types> void foo(Types ... args)
+{
+	print(args);	//error
+	print(args...);	// print(1,2,3); error
+	print(args)...;	// print(1), print(2), print(3) error
+
+	int x[] = { print(args)... };	// { print(1),print(2),print(3)} list초기화.
+
+	int x[] = { 0, (print(args), 0)... };
+			//{ 0, (print(1), 0), (print(2), 0)}	함수 실행하고 두번째 인자 0을 리턴한다.  print함수가 void일때 처리 방법
+
+	initializer_list<int> e = { (print(args), 0)...};	// ok 빈 배열이라도 가능
+}
+
+int main()
+{
+	foo();	// error 배열이 없다.
+
+	foo(1,2,3);	// args : 1,2,3
+}
+```
+- pack expansion은 함수 호출의 인자 또는 list 초기화를 사용한 표현식에서만 사용할 수 있다.0을
+
+### pack expansion #2
+```cpp
+template<typename... Types> void foo(Types ... args)
+{
+	int x[] = {args...};
+
+	std::pair<Types...> p1;	// pair<int, double> p1;
+}
+
+int main()
+{
+	foo(1, 3.4);
+}
+```
+```cpp
+template<typename ... Types> void foo(Types ... args)
+{
+	// Types : int, double
+	pair<Types...> p1;	// pair<int, double>
+	tuple<Types...> t1;	// tuple<int, double>
+
+	tuple<pair<Types...>> t2;	// tuple<pair<int, double>> t2; //ok
+	tuple<pair<Types>...> t3;	// tuple<pair<int>, pair<double>> t3;	//error
+
+	tuple<pair<int, Types>...> t4;	// tuple<pair<int, int>, pair<int, double>> t4;	// ok
+
+	pair<tuple<Types...>> p2;	// pair<tuple<int, double>> p2;	// error
+	pair<tuple<Types>...> p3;	// pair<tuple<int>, tuple<double>> p3;	// ok
+}
+
+int main()
+{
+	foo(1, 3.4);
+}
+```
