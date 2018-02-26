@@ -2094,3 +2094,44 @@ int main()
 }
 ```
 - parameter pack을 사용하는 패턴도 사용할 수 있다.
+
+### result using variadic template
+```cpp
+double hoo(short a, int b) { return 0; }
+
+// primary template을 만들고 리턴 타입을 얻을 수 있도록 부분 특수화 필요
+template<typename T> struct result_type
+{
+	typedef T type;	// 주석을 하거나 아래 코드를 넣는다.
+	static_assert(is_function<T>::value, "error");	// 에러처리 함수타입이 아닐때.
+};
+
+template<typename T> struct result_type;	// 이렇게 선언해도 정상적인 사용에는 문제없고 잘못 사용하면 에러.
+/*
+template<typename R, typename A1, typename A2> 
+struct result_type<R(A1, A2)>		// 이건 인자가 2개인 함수만 된다.
+{
+	typedef R type;
+};
+*/
+
+template<typename R, typename ... Types> 
+struct result_type<R(Types...)>	// 어떤 인자수라도 가능하다.
+{
+	typedef R type;
+};
+
+
+template<typename T> void foo(const T& t)
+{
+	// T : double(short, int) 함수 모양
+	typename result_type<T>::type ret;
+	cout << typeid(ret).name() << endl;
+}
+
+int main()
+{
+	foo(hoo);
+}
+```
+- 인자 개수에 제한을 없애기 위해서 가변 인자 템플릿 사용
