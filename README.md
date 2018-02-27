@@ -2227,7 +2227,7 @@ struct xtuple<T, Types...> : public xtuple<Types...>
 	T value;
 
 	xtuple() = default;
-	
+	// 4. 생성자등 필요한 멤버를 추가한다.
 	xtuple(const T& v, const Types& ... args)
 	 : value(v), xtuple<Types...>(args...) {}
 
