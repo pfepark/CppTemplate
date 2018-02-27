@@ -2184,3 +2184,61 @@ int main()
     foo(hoo);
 }
 ```
+
+### tuple
+```cpp
+int main()
+{
+	tuple<> t0;
+	tuple<int> t1(1);
+	tuple<int, double, int, char> t4(1, 3.4, 2, 'A');
+
+	get<2>(t4) = 10;	// 참조를 리턴하므로 가능.
+	cout << get<2>(t4) << endl;	// 2
+}
+```
+1. 서로 다른 타입의 객체를 N개 보관하는 템플릿
+2. 요소를 접근할 때는 get을 사용한다.
+
+```cpp
+// tuple 만들기
+// 1. 가변인자 템플릿을 사용해서 primary template을 만든다.
+template<typename ... Types> struct xtuple
+{
+	static constexpr int N = 0;
+}
+
+// 2. 1개의 요소(첫번째)를 보관할 수 있도록 부분 특수화를 사용한다.
+template<typename T, typename ... Types>
+struct xtuple<T, Types...>
+{
+	T value;
+
+	xtuple() = default;
+	xtuple(const T& v) : value(v) {}
+
+	static constexpr int N = 1;
+}
+
+// 3. 상속을 사용해서 N개를 보관할 수 있게 만든다.
+template<typename T, typename ... Types>
+struct xtuple<T, Types...> : public xtuple<Types...>
+{
+	T value;
+
+	xtuple() = default;
+	
+	xtuple(const T& v, const Types& ... args)
+	 : value(v), xtuple<Types...>(args...) {}
+
+	static constexpr int N = xtuple<Types...>::N + 1;
+}
+
+int main()
+{
+	xtuple<int> t1(3);
+	xtuple<int, double, char> t3;	// int 보관
+	xtuple<     double, char> t3;	// double 보관
+	xtuple<             char> t3;	// char 보관
+}
+```
