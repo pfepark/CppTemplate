@@ -2242,3 +2242,144 @@ int main()
 	xtuple<             char> t3;	// char 보관
 }
 ```
+### get using variadic template
+```cpp
+struct Base
+{
+	int value = 10;
+}
+
+struct Derived
+{
+	int value = 20;
+}
+
+int main()
+{
+	Derived d;
+
+	cout << d.value << endl;		// 20
+	cout << d.Base::value << endl;	// 10
+
+	// 값으로.. Base 타입인 임시객체를 생성. 복사생성하여 그것의 value을 출력
+	cout << static_cast<Base>(d).value << endl;	// 10
+
+	// 임시객체를 만들지 않고 참조한다.
+	cout << static_cast<Base&>(d).value << endl;	// 10
+
+	static_cast<Base>(d).value = 30;	// error 임시객체는 lvalue가 될 수 없다.
+	static_cast<Base&>(d).value = 30;	// ok
+}
+```
+값 캐스팅과 참조 캐스팅
+ - static_cast<Base>(d) : 임시객체 생성, lvalue가 될 수 없다.
+ - static_cast<Base&>(d) : 임시객체를 생성 안함. lvalue가 될 수 있다.
+
+ ```cpp
+ template<typename... Types> struct xtuple
+ {
+	 static constexpr int N = 0;
+ };
+
+ template<typename T, typename ... Types>
+ struct xtuple<T, Types...> : public xtuple<Types...>
+ {
+	 T value;
+	 xtuple() = default;
+	 xtuple(const T& v, const Type& ... args)
+		 : value(v), xtuple<types...>(args...) {}
+	static constexpr int N = xtuple<Types...>::N + 1;
+ };
+
+ int main()
+ {
+	 // 자기는 0번째 요소인 1만 보관하고 나머지는 base class가 보관한다.
+	 xtuple<int, double, char> t3(1, 3.4, 'A');
+
+	 cout << t3.value << endl;	// 1
+
+	 // 3.4를 보관하는 기반 클래스로 캐스팅
+	 cout << static_cast<xtuple<double, char>&>(t3).value << endl;
+
+	 cout << static_cast<xtuple<char>&>(t3).value << endl;
+
+	 char c = xget<2>(t3);
+ }
+
+template<size_t N, typename TP>	// TP : tuple
+튜플TP의 N번째 요소의 타입& 리턴
+xget(TP& tp)
+{
+	return static_cast<TP의 N번째 기반클래스&>(tp).value;
+	return tp.value;
+}
+```
+- N번째의 요소의 타입과 N번째 요소를 저장하는 타입(N번째 기반 클래스)를 알아야한다.
+
+```cpp
+// tuple이 가진 N번째 요소의 타입을 구하는 템플릿
+
+// primary template
+template<size_t N, typename TP> struct xtuple_element
+{
+	// 4. 이 기본 템플릿은 필요없기도 하다.
+	typedef TP type;
+};
+
+// 요소의 타입을 구할 수 있도록 부분 특수화를 제공한다.
+// 0번째 요소 타입은 구할 수 있다.
+template<typename T, typename ... Types>
+struct xtuple_element<0, xtuple<T, Types...>>
+{
+	typedef T type;
+};
+
+// N번째 요소를 위한 부분 특수화를 만들고 recursive를 사용.
+template<size_t N, typename T, typename ... Types>
+struct xtuple_element<N, xtuple<T, Types...>>
+{
+	// 템플릿 의존적인 타입을 꺼내니 typename 키워드 필요
+	typedef typename xtuple_element<N-1, xtuple<Types...>>::type type;
+};
+
+int main()
+{
+	xtuple_element<0, tuple<int, double, char>>::type n;
+
+	cout << typeid(n).name() << endl;
+}
+```
+
+```cpp
+template<typename T, typename ... Types>
+struct xtuple_element<0, xtuple<T, Types...>>
+{
+	typedef T type;	// 0번째 요소의 타입
+	typedef xtuple<T, Types...> tupleType;	// 0번째 요소를 저장하는 타입
+};
+
+template<size_t N, typename T, typename ... Types>
+struct xtuple_element<N, xtuple<T, Types...>>
+{
+	typedef typename xtuple_element<N-1, xtuple<Types...>>::type type;
+	typedef typename xtuple_element<N-1, xtuple<Types...>>::tupleType tupleType;
+};
+
+template<size_t N, typename TP>
+typename xtuple_element<N, TP>::type& xget(TP& tp)
+{
+	return static_cast<typename xtuple_element<N, TP>::tuple_type&>(tp).value;
+}
+
+int main()
+{
+	xtuple<int, double, char> t3(1, 3.4, 'A');
+
+	xget<1>(t3) = 1.1;
+	cout << xget<1>(t3) << endl;
+
+	xtuple_element<2, xtuple<int, double, char>>::type n;
+	xtuple_element<2, xtuple<int, double, char>>::tupleType t;
+	cout << typeid(n).name() << endl;
+}
+```
