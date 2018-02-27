@@ -2135,3 +2135,52 @@ int main()
 }
 ```
 - 인자 개수에 제한을 없애기 위해서 가변 인자 템플릿 사용
+
+### argument using variadic
+```cpp
+// 1. primary template을 만들고 typedef T type을 제공한다.
+template<size_t N, typename T> struct argument_type
+{
+    typedef T type;
+}
+
+// 2. 함수 타입 T안에 있는 함수 인자 타입을 얻을 수 있도록 부분 특수화 한다.
+// T -> R(A1, A2), T -> R(A1, Types...)
+template<typename R, typename A1, typename A2>
+struct argument_type<0, R(A1, A2)>
+{
+    // 이건 인자 2개만 됨.
+    typedef T type;
+}
+
+template<typename R, typename A1, typename ...Types>
+struct argument_type<0, R(A1, Types...)>
+{
+    typedef A1 type;
+}
+
+// argument_type이 0이 아닐때.
+template<size_t N, typename R, typename A1, typename ...Types>
+struct argument_type<N, R(A1, Types...)>
+{
+    typedef typename argument_type<N-1, R(Types...)>::type type;	//!!
+}
+
+double hoo(short a, int b)
+{
+    return 0;
+}
+
+template<typename T> void foo(const T& t)
+{
+    // T : double(short, int)
+    typename argument_type<0, T>::type ret;
+
+    cout << typeid(ret).name() << endl;
+}
+
+int main()
+{
+    foo(hoo);
+}
+```
