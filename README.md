@@ -2634,3 +2634,47 @@ CRTP 활용한 unique한 기반 클래스 만들기
 1. 기발 클래스의 static member data는 모든 파생 클래스에 의해 공유된다.
 2. 파생 클래스 별로 다른 static member data가 필요한 경우, 서로 다른 기반 클래스를 사용해야 한다.
 3. CRTP를 사용하면 모든 파생 클래스 별로 다른 타입의 기반 클래스를 만들 수 있다.
+
+### policy - base design
+```cpp
+template<typename T, typename ThreadModel> class List
+{
+    ThreadModel tm;
+public:
+    void push_front(cont T& a)
+    {
+        tm.lock();
+        // ...
+        tm.unlock();
+    }
+};
+
+class Nolock
+{
+public:
+    inline void lock() {}
+    inline void unlock() {}
+};
+
+class Mutexlock
+{
+public:
+    inline void lock() { ... }
+    inline void unlock() { ... }
+};
+
+// lock을 할지 말지 사용자가 결정할 수 있게 템플릿 인자로 넘긴다.
+List<int, Nolock> s;    // 전역별수, 멀티스레드에 안전하지 않다.
+
+int main()
+{
+    s.push_front(10);
+}
+```
+1. 클래스가 사용하는 정책을 템플릿 인자를 통해서 교체 할 수 있게 만드는 디자인
+2. 성능 저하 없이 정책을 교체 할 수 있다.
+3. 대부분 정책을 담는 "단위 전략 클래스"는 지켜야 하는 규칙이 있다.
+ - 규칙을 표현하는 코딩 방식은 없다. (인터페이스 사용시 가상 함수이므로 약간의 오버헤드 발생)
+   C++20 concept 문법
+ - 우리가 만든 동기화 정책 클래스는 "lock/unlock" 함수가 필요하다.
+ - 템플릿 기반 라이브러리, 특히 STL에 널리 사용되는 디자인 기법
