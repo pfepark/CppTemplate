@@ -2484,3 +2484,153 @@ int main()
 	Vector<double> 	v3;
 }
 ```
+
+### CRTP (Curiously Recurring Template Pattern)
+```cpp
+template<typename T> class Base
+{
+public:
+    // 자식 클래스 이름을 템플릿인자로 넘겨준다.
+    Base()
+    {
+        cout << typeid(T).name();
+    }
+};
+
+clss Derived : public Base<Derived>
+{
+
+};
+
+int main()
+{
+    Derived d;
+}
+```
+
+```cpp
+template<typename T>
+class Window
+{
+public:
+    void msgLoop()  // void msgLoop(Window* const this)
+    {
+        //OnClick();  // this->OnClick()
+        static_cast<T*>(this)->OnClick();
+    }
+    void OnClick() { cout << "Window OnClick" << endl; }
+};
+
+class FrameWindow : public Window<FrameWindow>
+{
+public:
+    void OnClick() { cout << "FrameWindow OnClick" << endl; }
+};
+
+int main()
+{
+    FrameWindow fw;
+    fw.msgLoop();
+}
+```
+CRTP 활용
+1. 비 가상 함수를 가상함수처럼 동작하게 만들기
+ - this 포인터를 파생 클래스 타입으로 캐스팅 한 후 함수 호출
+ - MS ATL라이브러리
+
+### CRTP 활용
+```cpp
+class Cursor
+{
+private:
+    Cursor() {}
+
+public:
+    Cursor(const Cursor& c) = delete;
+    void operator=(const Cursor& c) = delete;
+
+    static Cursor& getInstance()
+    {
+        static Cursor instance;
+        return instance;
+    }
+};
+
+int main()
+{
+    //Cursor c1, c2;
+    Cursor& c1 = Cursor::getInstance();
+    Cursor& c2 = Cursor::getInstance(); // 같은 객체..
+}
+template <typename T>
+class Singleton
+{
+protected:
+    Singleton() {}
+
+public:
+    Singleton(const Singleton& c) = delete;
+    void operator=(const Singleton& c) = delete;
+
+    static T& getInstance()
+    {
+        static T instance;
+        return instance;
+    }
+};
+
+class Mouse : public Singleton<Mouse>
+{
+
+};
+
+int main()
+{
+    Mouse& m = Mouse::getInstance();
+}
+```
+CRTP활용한 싱글톤 만들기
+1. 싱글톤 : 하나의 객체만 생성할 수 있게 하는 디자인 패턴
+ - private 생성자
+ - 복사와 대입 금지
+ - 하나의 객체를 만들어서 리턴하는 static 맴버함수
+
+```cpp
+template<typename T>
+class Object
+{
+public:
+    static int cnt;
+
+    Object()  { ++cnt; }
+    ~Object() { --cnt; }
+
+    static int getConut() { return cnt; }
+};
+
+template<typename T>
+int Object<T>::cnt = 0;
+
+class Mouse : public Object<Mouse>
+{
+
+}
+
+class Keyboard : public Object<Keyboard>
+{
+
+}
+
+int main()
+{
+    // 서로 다른 클래스를 만들어야 static변수가 따로 생긴다.
+    Mouse m1, m2;
+    Keyboard k1, k2;
+
+    cout << k1.getConut() << endl;
+}
+```
+CRTP 활용한 unique한 기반 클래스 만들기
+1. 기발 클래스의 static member data는 모든 파생 클래스에 의해 공유된다.
+2. 파생 클래스 별로 다른 static member data가 필요한 경우, 서로 다른 기반 클래스를 사용해야 한다.
+3. CRTP를 사용하면 모든 파생 클래스 별로 다른 타입의 기반 클래스를 만들 수 있다.
