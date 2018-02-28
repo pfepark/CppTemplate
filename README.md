@@ -2678,3 +2678,67 @@ int main()
    C++20 concept 문법
  - 우리가 만든 동기화 정책 클래스는 "lock/unlock" 함수가 필요하다.
  - 템플릿 기반 라이브러리, 특히 STL에 널리 사용되는 디자인 기법
+### STL allocator
+```cpp
+template<typename T> class allocator
+{
+public:
+    T* allocate() {}
+    void deallocate() {}
+}
+template<typename T, typename Ax = allocator<T>> class vector
+{
+    T* buff;
+    Ax ax;
+public:
+    void resize(int n)
+    {
+        //버퍼 재할당이 필요하다면 어떻게?
+        // new, malloc, calloc, win32, api, linux system call
+        T* p = ax.allocate(n);
+        ax.deallocate();
+    }
+};
+
+int main()
+{
+    vector<int> v(10);
+    vector<int, MyAlloc<int>> v(10);
+    v.resize(20);
+}
+```
+
+### allocator rebind
+```cpp
+template<typename T> class allocator
+{
+public:
+    T* allocate() {}
+    void deallocate() {}
+
+    template<typename U> struct rebind
+    {
+        typename allocator<U> other;
+    };
+}
+
+template<typename T, typename Ax = allocator<T>> class list
+{
+    struct Node {};
+
+    Ax ax; // allocator<int> Node를 생성하는 allocator가 필요.
+    allocator<int>::rebind<Node>::other ax; // allocator<Node> ax;
+    typename Ax::template rebind<Node>::other ax;
+public:
+    void push_front(const T& a)
+    {
+        ax.allocate(1);
+    }
+}
+
+int main()
+{
+    list<int> s;
+    s.push_front(10);
+}
+```
